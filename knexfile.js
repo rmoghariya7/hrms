@@ -11,7 +11,7 @@ module.exports = {
       port: 1234,
       user: "postgres",
       password: "admin",
-      database: "tutorial_db",
+      database: "hrms",
     },
     migrations: {
       tableName: "knex_migrations",

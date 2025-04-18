@@ -3,12 +3,11 @@ const router = express.Router();
 const loginRoutes = require("./login.routes");
 const registerRoutes = require("./register.routes");
 
-router.use("/health-check", (req, res, next) => {
+router.use("/health-check", (req, res) => {
   res.status(200).json({
     status: "ok",
     message: "Server is running",
   });
-  next();
 });
 
 router.use("/register", registerRoutes);

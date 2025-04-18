@@ -1,22 +1,37 @@
 const ErrorHandler = require("../utils/ErrorHandler");
 
-module.exports = (schema) => async (req, res, next) => {
-  console.log("schema", schema);
-  try {
-    req.body = await schema.validateAsync(req.body || {}, {
-      abortEarly: false,
-      allowUnknown: true,
-      stripUnknown: true,
-    });
-    console.log("req.body", req.body);
-    next();
-  } catch (error) {
-    console.log("error 👻", error);
-    const errors = error.inner?.map((err) => ({
-      message: err.message,
-      field: err.path,
-    })) || [{ message: error.message }];
+const validate = (schemas) => {
+  return async (req, res, next) => {
+    const parts = ["body", "query", "params"];
+    const allErrors = [];
 
-    return next(new ErrorHandler(errors, 400));
-  }
+    for (const part of parts) {
+      if (schemas[part]) {
+        try {
+          const value = await schemas[part].validateAsync(req[part] || {}, {
+            abortEarly: false,
+            allowUnknown: true,
+            stripUnknown: true,
+          });
+          req[part] = value;
+        } catch (error) {
+          const errors = error.details.map((err) => {
+            return {
+              message: err.message,
+              location: `${part}.${err.path.join(".")}`,
+            };
+          });
+          allErrors.push(...errors);
+        }
+      }
+    }
+
+    if (allErrors.length > 0) {
+      return next(new ErrorHandler(allErrors, 400));
+    }
+
+    next();
+  };
 };
+
+module.exports = validate;
