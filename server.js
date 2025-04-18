@@ -15,9 +15,11 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", routes);
 
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
+  console.log(err);
   res.status(err.code || 500).json({
-    message: err.message || "Internal Server Error",
+    error: err.error || err.message || "Internal Server Error",
   });
 });
 
