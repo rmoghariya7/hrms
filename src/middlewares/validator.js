@@ -8,7 +8,7 @@ const validate = (schemas) => {
     for (const part of parts) {
       if (schemas[part]) {
         try {
-          const value = await schemas[part].validateAsync(req[part] || {}, {
+          const value = await schemas[part].validateAsync(req?.[part] || {}, {
             abortEarly: false,
             allowUnknown: true,
             stripUnknown: true,

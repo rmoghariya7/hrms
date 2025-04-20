@@ -2,57 +2,96 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
+
 exports.up = async function (knex) {
-  await knex.schema.createTable("roles", (table) => {
-    table.increments("id").primary();
-    table.string("role").notNullable().unique();
-  });
+  await knex.schema
+    .createTable("roles", (table) => {
+      table.integer("role").notNullable().unique();
+    })
+    .then(() => {
+      return knex("roles").insert([{ role: 0 }, { role: 1 }, { role: 2 }]);
+    });
 
   await knex.schema
     .createTable("permissions", (table) => {
-      table.increments("id").primary();
       table.string("permission").notNullable().unique();
     })
     .then(() => {
       return knex("permissions").insert([{ permission: "manage_users" }]);
     });
 
-  await knex.schema.createTable("users", (table) => {
-    table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
-    table.string("username").notNullable().unique();
+  await knex.schema.createTable("organization", (table) => {
+    table.increments("id").primary();
+    table.string("name").notNullable();
+    table.string("email").notNullable().unique();
+    table.string("phone").notNullable();
+    table.string("address").notNullable();
+    table.string("city").notNullable();
+    table.string("state").notNullable();
+    table.string("country").notNullable();
+    table.string("zip_code").notNullable();
+    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamp("updated_at").defaultTo(knex.fn.now());
+    table.string("password").notNullable();
+    table.integer("role").defaultTo(1);
+  });
+
+  await knex.schema.createTable("employee", (table) => {
+    table.increments("id").primary();
     table.string("email").notNullable().unique();
     table.string("password").notNullable();
-    table.string("first_name").notNullable();
-    table.string("last_name").notNullable();
+    table.string("firstName").notNullable();
+    table.string("lastName").notNullable();
     table.string("phone_number");
     table.timestamps(true, true);
   });
 
-  await knex.schema.createTable("user_roles", (table) => {
+  await knex.schema.createTable("employee_organization", (table) => {
     table
-      .uuid("user_id")
-      .primary()
-      .defaultTo(knex.raw("gen_random_uuid()"))
+      .integer("employee_id")
+      .notNullable()
+      .unsigned()
       .references("id")
-      .inTable("users")
-      .onDelete("CASCADE")
-      .defaultTo(knex.fn.uuid());
-    table
-      .integer("role_id")
-      .references("id")
-      .inTable("roles")
+      .inTable("employee")
       .onDelete("CASCADE");
-    table.primary(["user_id", "role_id"]);
+    table
+      .integer("organization_id")
+      .references("id")
+      .inTable("organization")
+      .onDelete("CASCADE");
+    table.primary(["employee_id", "organization_id"]);
   });
 
-  await knex.schema.createTable("user_permissions", (table) => {
-    table.uuid("user_id").references("id").inTable("users").onDelete("CASCADE");
+  await knex.schema.createTable("employee_roles", (table) => {
     table
-      .integer("permission_id")
+      .increments("employee_id")
+      .notNullable()
+      .unsigned()
       .references("id")
+      .inTable("employee")
+      .onDelete("CASCADE");
+    table
+      .integer("role")
+      .references("role")
+      .inTable("roles")
+      .onDelete("CASCADE");
+    table.primary(["employee_id", "role"]);
+  });
+
+  await knex.schema.createTable("employee_permissions", (table) => {
+    table
+      .integer("employee_id")
+      .notNullable()
+      .unsigned()
+      .references("id")
+      .inTable("employee")
+      .onDelete("CASCADE");
+    table
+      .string("permission")
+      .references("permission")
       .inTable("permissions")
       .onDelete("CASCADE");
-    table.primary(["user_id", "permission_id"]);
+    table.primary(["employee_id", "permission"]);
   });
 };
 
@@ -62,9 +101,11 @@ exports.up = async function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema
-    .dropTableIfExists("user_roles")
-    .dropTableIfExists("user_permissions")
-    .dropTableIfExists("users")
+    .dropTableIfExists("employee_roles")
+    .dropTableIfExists("employee_permissions")
+    .dropTableIfExists("employee")
+    .dropTableIfExists("organization")
+    .dropTableIfExists("employee_organization")
     .dropTableIfExists("roles")
     .dropTableIfExists("permissions");
 };
