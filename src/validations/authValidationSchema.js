@@ -6,7 +6,6 @@ const registerEmployeeSchema = {
     lastName: Joi.string().alphanum().min(2).max(30).required(),
     password: Joi.string().required(),
     email: Joi.string().email().required(),
-    organizationId: Joi.number().required(),
   }),
 };
 
@@ -24,7 +23,7 @@ const registerOrgSchema = {
   }),
 };
 
-const loginUserSchema = {
+const loginSchema = {
   body: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
@@ -33,6 +32,6 @@ const loginUserSchema = {
 
 module.exports = {
   registerEmployeeSchema,
-  loginUserSchema,
+  loginSchema,
   registerOrgSchema,
 };

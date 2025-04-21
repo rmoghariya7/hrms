@@ -8,10 +8,19 @@ const {
   registerEmployeeSchema,
   registerOrgSchema,
 } = require("../validations/authValidationSchema");
+const loggedInAsOrganization = require("../middlewares/loggedInAsOrganization");
 const router = express.Router();
 
-router.post("/", validator(registerEmployeeSchema), registerEmployee);
+router.post(
+  "/",
+  loggedInAsOrganization,
+  validator(registerEmployeeSchema),
+  registerEmployee
+);
 
 router.post("/org", validator(registerOrgSchema), registerOrganization);
+
+// TODO: implement superuser registration
+// router.post("/superuser", validator(registerEmployeeSchema), registerEmployee);
 
 module.exports = router;

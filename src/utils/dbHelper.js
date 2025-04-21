@@ -1,7 +1,7 @@
 const db = require("../db/pool");
 
-const getUser = (email) => {
-  return db("users").where("email", email).first();
+const getEmployee = (email) => {
+  return db("employee").where("email", email).first();
 };
 
 const getOrganization = (email) => {
@@ -9,6 +9,6 @@ const getOrganization = (email) => {
 };
 
 module.exports = {
-  getUser,
+  getEmployee,
   getOrganization,
 };

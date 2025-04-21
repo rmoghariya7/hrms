@@ -1,5 +1,5 @@
 const db = require("../db/pool");
-const { getUser, getOrganization } = require("../utils/dbHelper");
+const { getEmployee, getOrganization } = require("../utils/dbHelper");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { generateToken, encryptPassword } = require("../utils/authHelper");
 const ResponseHandler = require("../utils/responseHandler");
@@ -7,16 +7,24 @@ const { Roles } = require("../../constants");
 const asyncHandler = require("../utils/asyncHandler");
 
 const registerEmployee = asyncHandler(async (req, res, next) => {
-  const { firstName, lastName, email, password, organizationId } = req.body;
+  const { firstName, lastName, email, password } = req.body;
+  const { organizationId, email: orgEmail } = req.user;
+
+  const organization = await getOrganization(orgEmail);
+
+  if (!organization) {
+    return next(
+      new ErrorHandler("Organization not found, please register first", 400)
+    );
+  }
+
   const Response = new ResponseHandler(res);
 
   // check if user already exists
-  const isUserAlreadyExist = await getUser(email);
+  const isUserAlreadyExist = await getEmployee(email);
 
   if (isUserAlreadyExist) {
-    return next(
-      new ErrorHandler("Something went wrong while registering user", 400)
-    );
+    return next(new ErrorHandler("Email already exist", 400));
   }
 
   // encrypt password
@@ -25,8 +33,8 @@ const registerEmployee = asyncHandler(async (req, res, next) => {
   await db.transaction(async (trx) => {
     const [employee] = await trx("employee")
       .insert({
-        first_name: firstName,
-        last_name: lastName,
+        firstName,
+        lastName,
         email,
         password: encryptedPassword,
       })
@@ -37,13 +45,6 @@ const registerEmployee = asyncHandler(async (req, res, next) => {
         new ErrorHandler("Something went wrong while registering user", 400)
       );
     }
-
-    const authToken = generateToken({
-      id: employee.id,
-      firstName,
-      lastName,
-      email,
-    });
 
     // add user to user_org table
     await trx("employee_organization").insert({
@@ -57,16 +58,11 @@ const registerEmployee = asyncHandler(async (req, res, next) => {
       role: Roles.MEMBER,
     });
 
-    res.cookie("auth_token", authToken, {
-      httpOnly: true,
-      sameSite: "strict",
-    });
-
     // send response
     Response.success(
       {
         employee: {
-          id: employee[0].id,
+          id: employee.id,
           firstName,
           lastName,
           email,
@@ -155,6 +151,9 @@ const registerOrganization = asyncHandler(async (req, res, next) => {
     );
   });
 });
+
+// TODO: implement super admin registration
+// const registerSuperAdmin = asyncHandler(async (req, res, next) => {
 
 module.exports = {
   registerEmployee,
