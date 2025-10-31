@@ -1,16 +1,20 @@
 const db = require("../db/pool");
-const { getEmployee, getOrganization } = require("../utils/dbHelper");
+const {
+  getEmployee,
+  getOrganization,
+  getOrganizationByEmail,
+} = require("../utils/dbHelper");
 const ErrorHandler = require("../utils/ErrorHandler");
 const { generateToken, encryptPassword } = require("../utils/authHelper");
 const ResponseHandler = require("../utils/responseHandler");
-const { Roles } = require("../../constants");
+const { Roles, UserTypes } = require("../../constants");
 const asyncHandler = require("../utils/asyncHandler");
 
 const registerEmployee = asyncHandler(async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
-  const { organizationId, email: orgEmail } = req.user;
+  const { organizationId, id } = req.user;
 
-  const organization = await getOrganization(orgEmail);
+  const organization = await getOrganization(id);
 
   if (!organization) {
     return next(
@@ -90,7 +94,7 @@ const registerOrganization = asyncHandler(async (req, res, next) => {
   const Response = new ResponseHandler(res);
 
   // check if user already exists
-  const isOrgAlreadyExists = await getOrganization(email);
+  const isOrgAlreadyExists = await getOrganizationByEmail(email);
 
   if (isOrgAlreadyExists) {
     return next(
@@ -102,7 +106,6 @@ const registerOrganization = asyncHandler(async (req, res, next) => {
   const encryptedPassword = await encryptPassword(password);
 
   // start transaction
-
   await db.transaction(async (trx) => {
     const org = await trx("organization")
       .insert({
@@ -129,6 +132,7 @@ const registerOrganization = asyncHandler(async (req, res, next) => {
       id: org[0].id,
       name,
       email,
+      type: UserTypes.ORGANIZATION,
     });
 
     // set cookie

@@ -5,6 +5,11 @@ const Roles = {
   MEMBER: 3,
 };
 
+const UserTypes = {
+  ORGANIZATION: "organization",
+  EMPLOYEE: "employee",
+};
+
 const Permissions = {
   manage_users: "manage_users",
 };
@@ -12,4 +17,5 @@ const Permissions = {
 module.exports = {
   Roles,
   Permissions,
+  UserTypes,
 };

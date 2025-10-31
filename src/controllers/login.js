@@ -1,12 +1,13 @@
+const { UserTypes } = require("../../constants");
 const asyncHandler = require("../utils/asyncHandler");
 const { comparePassword, generateToken } = require("../utils/authHelper");
-const { getOrganization, getEmployee } = require("../utils/dbHelper");
+const { getOrganizationByEmail, getEmployee } = require("../utils/dbHelper");
 const ErrorHandler = require("../utils/ErrorHandler");
 
 const organizationLogin = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const org = await getOrganization(email);
+  const org = await getOrganizationByEmail(email);
 
   if (!org) {
     return next(
@@ -24,6 +25,7 @@ const organizationLogin = asyncHandler(async (req, res, next) => {
     id: org.id,
     name: org.name,
     email: org.email,
+    type: UserTypes.ORGANIZATION,
   });
 
   res.cookie("auth_token", authToken, {
@@ -66,6 +68,7 @@ const employeeLogin = asyncHandler(async (req, res, next) => {
     firstName: employee.firstName,
     lastName: employee.lastName,
     email: employee.email,
+    type: UserTypes.EMPLOYEE,
   });
 
   res.cookie("auth_token", authToken, {

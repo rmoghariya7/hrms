@@ -4,10 +4,6 @@ const cors = require("cors");
 const routes = require("./src/routes");
 const cookieParser = require("cookie-parser");
 
-// db.raw("SELECT 1")
-//   .then(() => console.log("✅ Connected to PostgreSQL via Knex"))
-//   .catch((err) => console.error("❌ Connection error:", err));
-
 const app = express();
 
 app.use(cors());

@@ -9,7 +9,12 @@ exports.up = async function (knex) {
       table.integer("role").notNullable().unique();
     })
     .then(() => {
-      return knex("roles").insert([{ role: 0 }, { role: 1 }, { role: 2 }]);
+      return knex("roles").insert([
+        { role: 0 },
+        { role: 1 },
+        { role: 2 },
+        { role: 3 },
+      ]);
     });
 
   await knex.schema
